@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mental and Physical Health PUI</title>
+    <style>
+        body {
+            background-color: #303030; /* Dark gray background */
+            color: white; /* White text for dark background */
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .feature-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            /* Add a fixed height and enable vertical scrolling for the feature list */
+            height: 400px;
+            overflow-y: auto;
+        }
+
+        .selected-list-container {
+            flex: 1;
+            /* Add a fixed height and enable vertical scrolling for the selected features list */
+            height: 400px;
+            overflow-y: auto;
+            padding-left: 10px; /* Add some space on the left to separate the two columns */
+        }
+
+        .selected-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feature-button {
+            margin-bottom: 5px;
+            background-color: #4B0082; /* Purple background color for buttons */
+            border: none;
+            color: white; /* White text for buttons */
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .feature-button.selected {
+            background-color: #c6c917; /* Darker purple for selected buttons */
+        }
+
+        h1, h2, h3 {
+            color: white; /* Purple headers */
+            text-align: center;
+        }
+
+        label {
+            color: white; /* White text for labels */
+        }
+
+        input[type="checkbox"] {
+            margin-left: 5px;
+        }
+
+        input[type="text"] {
+            background-color: #000000; /* Purple background for text inputs */
+            border: none;
+            color: white; /* White text for text inputs */
+            padding: 5px;
+            border-radius: 5px;
+            width: 100px;
+        }
+
+        input[type="submit"] {
+            background-color: #800080; /* Darker purple for the "Train Model" button */
+            border: none;
+            color: white; /* White text for the button */
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #4B0082; /* Hover color for the "Train Model" button */
+        }
+
+        /* Accuracy section styles */
+        #accuracy-section {
+            background-color: #3b3b3b; /* Purple background for the accuracy section */
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        #accuracy-section h2 {
+            color: white; /* White header text for the accuracy section */
+        }
+
+        #accuracy-section p {
+            color: white; /* White text for the accuracy section */
+        }
+    </style>
+</head>
+<body>
+    {% if error_message and not selected_features %}
+    <p style="color: red; font-weight: bold;">{{ error_message }}</p>
+    {% endif %}
+
+    <h1>Mental and Physical PUI</h1>
+    <form action="/" method="post">
+        <!-- Feature selection section -->
+        <div class="container">
+            <div class="feature-list">
+                <h3>Select Features:</h3>
+                {% for feature in features %}
+                <button type="button" class="feature-button" value="{{ feature }}">{{ feature }}</button>
+                {% endfor %}
+            </div>
+            <div class="selected-list-container">
+                <h3>Selected Features:</h3>
+                <div class="selected-list" id="selectedList">
+                </div>
+            </div>
+        </div>
+        <br>
+        <!-- Add hyperparameter tuning options -->
+        <label for="perform_tuning">Hyperparameter Tuning:</label>
+        <input type="checkbox" id="perform_tuning" name="perform_tuning">
+        <br>
+        <label for="n_estimators">n_estimators:</label>
+        <input type="text" id="n_estimators" name="n_estimators" value="300">
+        <br>
+        <label for="max_depth">max_depth:</label>
+        <input type="text" id="max_depth" name="max_depth" value="20">
+        <br>
+        <label for="min_samples_split">min_samples_split:</label>
+        <input type="text" id="min_samples_split" name="min_samples_split" value="10">
+        <br><br>
+        <!-- Add the "Train Model" button -->
+        <input type="submit" value="Train Model" id="trainModelButton">
+    </form>
+
+    <div id="accuracy-section">
+        <h2>Accuracy Metrics</h2>
+    
+        <!-- PHYSHLTH Metrics (Random Forest) -->
+        <div>
+            <h3>PHYSHLTH (Random Forest)</h3>
+            <p>Accuracy: <span id="physhlth-accuracy-rf">{{ accuracy_rf_phys14d }}</span></p>
+            <p>F1 Score: <span id="physhlth-f1-rf">{{ f1_score_rf_phys14d }}</span></p>
+            <p>Precision: <span id="physhlth-precision-rf">{{ precision_rf_phys14d }}</span></p>
+            <p>Recall: <span id="physhlth-recall-rf">{{ recall_rf_phys14d }}</span></p>
+            <!--p>AUC: <span id="physhlth-auc-rf">{{ auc_rf_phys14d }}</span></p-->
+        </div>
+    
+        <!-- PHYSHLTH Metrics (Gradient Boosting) -->
+        <div>
+            <h3>PHYSHLTH (Gradient Boosting)</h3>
+            <p>Accuracy: <span id="physhlth-accuracy-gb">{{ accuracy_gb_phys14d }}</span></p>
+            <p>F1 Score: <span id="physhlth-f1-gb">{{ f1_score_gb_phys14d }}</span></p>
+            <p>Precision: <span id="physhlth-precision-gb">{{ precision_gb_phys14d }}</span></p>
+            <p>Recall: <span id="physhlth-recall-gb">{{ recall_gb_phys14d }}</span></p>
+            <!--p>AUC: <span id="physhlth-auc-gb">{{ auc_gb_phys14d }}</span></p-->
+        </div>
+    
+        <!-- MENTHLTH Metrics (Random Forest) -->
+        <div>
+            <h3>MENTHLTH (Random Forest)</h3>
+            <p>Accuracy: <span id="menthlth-accuracy-rf">{{ accuracy_rf_ment14d }}</span></p>
+            <p>F1 Score: <span id="menthlth-f1-rf">{{ f1_score_rf_ment14d }}</span></p>
+            <p>Precision: <span id="menthlth-precision-rf">{{ precision_rf_ment14d }}</span></p>
+            <p>Recall: <span id="menthlth-recall-rf">{{ recall_rf_ment14d }}</span></p>
+            <!--p>AUC: <span id="menthlth-auc-rf">{{ auc_rf_ment14d }}</span></p-->
+        </div>
+    
+        <!-- MENTHLTH Metrics (Gradient Boosting) -->
+        <div>
+            <h3>MENTHLTH (Gradient Boosting)</h3>
+            <p>Accuracy: <span id="menthlth-accuracy-gb">{{ accuracy_gb_ment14d }}</span></p>
+            <p>F1 Score: <span id="menthlth-f1-gb">{{ f1_score_gb_ment14d }}</span></p>
+            <p>Precision: <span id="menthlth-precision-gb">{{ precision_gb_ment14d }}</span></p>
+            <p>Recall: <span id="menthlth-recall-gb">{{ recall_gb_ment14d }}</span></p>
+            <!--p>AUC: <span id="menthlth-auc-gb">{{ auc_gb_ment14d }}</span></p-->
+        </div>
+    </div>
+
+    <!-- Confusion Matrix section -->
+    <div id="confusion-matrix-section" style="display: none;">
+        <h2></h2>
+        <div>
+            <p>PHYSHLTH:</p>
+            <img id="cm_physhlth_img" alt="Confusion Matrix PHYSHLTH">
+        </div>
+        <div>
+            <p>MENTHLTH:</p>
+            <img id="cm_menthlth_img" alt="Confusion Matrix MENTHLTH">
+        </div>
+    </div>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const featureButtons = document.querySelectorAll(".feature-button");
+            const selectedList = document.getElementById("selectedList");
+            const trainModelButton = document.getElementById("trainModelButton");
+
+            // Array to store selected features
+            const selectedFeaturesArray = [];
+
+            // Function to update the selected features list
+            function updateSelectedList() {
+                selectedList.innerHTML = "";
+                selectedFeaturesArray.length = 0; // Clear the array
+                featureButtons.forEach(button => {
+                    if (button.classList.contains("selected")) {
+                        selectedFeaturesArray.push(button.value);
+
+                        // Add the selected feature to the list in the HTML
+                        const selectedFeature = document.createElement("p");
+                        selectedFeature.textContent = button.value;
+                        selectedList.appendChild(selectedFeature);
+                    }
+                });
+            }
+
+            // Function to mark selected features based on the 'selected_features' variable
+            function markSelectedFeatures() {
+                const selectedFeatures = JSON.parse('{{ selected_features | tojson | safe }}');
+                featureButtons.forEach(button => {
+                    if (selectedFeatures.includes(button.value)) {
+                        button.classList.add("selected");
+                    }
+                });
+            }
+
+            // Call the function to mark selected features when the page is loaded
+            markSelectedFeatures();
+
+            // Event listener for feature button clicks
+            featureButtons.forEach(button => {
+                button.addEventListener("click", () => {
+                    button.classList.toggle("selected");
+                    updateSelectedList(); // Update the selected features list on every button click
+                });
+            });
+
+            // Event listener for the "Train Model" button click
+trainModelButton.addEventListener("click", function(event) {
+    event.preventDefault();
+    const performTuning = document.getElementById("perform_tuning").checked;
+    const n_estimators = document.getElementById("n_estimators").value;
+    const max_depth = document.getElementById("max_depth").value;
+    const min_samples_split = document.getElementById("min_samples_split").value;
+
+    // Submit the form via AJAX with the updated selected features and hyperparameter values
+    submitForm(selectedFeaturesArray, performTuning, n_estimators, max_depth, min_samples_split);
+});
+
+// Function to submit the form data via AJAX
+function submitForm(selectedFeatures, performTuning, n_estimators, max_depth, min_samples_split) {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/");
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+
+            // Update the accuracy metrics on the page
+            // Update the accuracy metrics on the page
+            document.getElementById("physhlth-accuracy-rf").innerText = response._PHYS14D.accuracy_rf;
+            document.getElementById("physhlth-f1-rf").innerText = response._PHYS14D.f1_score_rf;
+            document.getElementById("physhlth-precision-rf").innerText = response._PHYS14D.precision_rf;
+            document.getElementById("physhlth-recall-rf").innerText = response._PHYS14D.recall_rf;
+            document.getElementById("physhlth-auc-rf").innerText = response._PHYS14D.auc_rf;
+
+            document.getElementById("physhlth-accuracy-gb").innerText = response._PHYS14D.accuracy_gb;
+            document.getElementById("physhlth-f1-gb").innerText = response._PHYS14D.f1_score_gb;
+            document.getElementById("physhlth-precision-gb").innerText = response._PHYS14D.precision_gb;
+            document.getElementById("physhlth-recall-gb").innerText = response._PHYS14D.recall_gb;
+            document.getElementById("physhlth-auc-gb").innerText = response._PHYS14D.auc_gb;
+
+            document.getElementById("menthlth-accuracy-rf").innerText = response._MENT14D.accuracy_rf;
+            document.getElementById("menthlth-f1-rf").innerText = response._MENT14D.f1_score_rf;
+            document.getElementById("menthlth-precision-rf").innerText = response._MENT14D.precision_rf;
+            document.getElementById("menthlth-recall-rf").innerText = response._MENT14D.recall_rf;
+            document.getElementById("menthlth-auc-rf").innerText = response._MENT14D.auc_rf;
+
+            document.getElementById("menthlth-accuracy-gb").innerText = response._MENT14D.accuracy_gb;
+            document.getElementById("menthlth-f1-gb").innerText = response._MENT14D.f1_score_gb;
+            document.getElementById("menthlth-precision-gb").innerText = response._MENT14D.precision_gb;
+            document.getElementById("menthlth-recall-gb").innerText = response._MENT14D.recall_gb;
+            document.getElementById("menthlth-auc-gb").innerText = response._MENT14D.auc_gb;
+
+            // Show the accuracy section
+            document.getElementById("accuracy-section").style.display = "block";
+        } else {
+            console.error("Request failed. Status: " + xhr.status);
+        }
+    };
+    // Include the hyperparameter values in the JSON payload
+    xhr.send(JSON.stringify({
+        selected_features: selectedFeatures,
+        perform_tuning: performTuning,
+        n_estimators: n_estimators,
+        max_depth: max_depth,
+        min_samples_split: min_samples_split
+    }));
+}
+        });
+    </script>
+</body>
+</html>
